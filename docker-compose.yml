@@ -6,12 +6,12 @@ services:
       context: .
       dockerfile: ./Dockerfile
     ports:
-      - '3003:3003'
+      - '3001:3001'
     volumes:
       - ./:/usr/src/app
     env_file:
       - .env
     command: yarn start:dev
     environment:
-      PORT: 3003
+      PORT: 3001
     restart: always
