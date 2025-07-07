@@ -20,8 +20,8 @@ let AppController = class AppController {
     constructor(appService) {
         this.appService = appService;
     }
-    getHello() {
-        return this.appService.getHello();
+    getHello(body) {
+        console.log({ body });
     }
     paymentMethod() {
         return this.appService.payment();
@@ -35,9 +35,10 @@ let AppController = class AppController {
 exports.AppController = AppController;
 __decorate([
     (0, common_1.Post)('api/webhook'),
+    __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", String)
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
 ], AppController.prototype, "getHello", null);
 __decorate([
     (0, common_1.Post)('payment'),

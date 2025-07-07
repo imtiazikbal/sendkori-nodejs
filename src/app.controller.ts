@@ -1,4 +1,4 @@
-import { Controller, Param, Post, Get } from '@nestjs/common';
+import { Controller, Param, Post, Get, Body } from '@nestjs/common';
 import { AppService } from './app.service';
 
 @Controller()
@@ -6,8 +6,9 @@ export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Post('api/webhook')
-  getHello(): string {
-    return this.appService.getHello();
+  getHello(@Body() body) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    console.log({ body });
   }
 
   @Post('payment')
