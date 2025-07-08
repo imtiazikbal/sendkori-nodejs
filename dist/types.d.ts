@@ -12,4 +12,12 @@ export interface PaymentData {
     amount: number;
     paymentMethod: PaymentMethod[];
 }
+export interface IPaymentValidate {
+    method: string;
+    sessionId?: string;
+    transactionId: string;
+}
+export interface ICancelPayment {
+    sessionId?: string;
+}
 export {};

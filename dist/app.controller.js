@@ -31,6 +31,18 @@ let AppController = class AppController {
             sessionId,
         });
     }
+    paymentValidate(body) {
+        return this.appService.paymentValidate({
+            sessionId: body.sessionId,
+            method: body.method,
+            transactionId: body.transactionId,
+        });
+    }
+    paymentCancel(body) {
+        return this.appService.paymentCancel({
+            sessionId: body.sessionId,
+        });
+    }
 };
 exports.AppController = AppController;
 __decorate([
@@ -53,6 +65,20 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], AppController.prototype, "paymentData", null);
+__decorate([
+    (0, common_1.Post)('payment/validate'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AppController.prototype, "paymentValidate", null);
+__decorate([
+    (0, common_1.Post)('payment/cancel'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AppController.prototype, "paymentCancel", null);
 exports.AppController = AppController = __decorate([
     (0, common_1.Controller)(),
     __metadata("design:paramtypes", [app_service_1.AppService])

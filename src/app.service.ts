@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PaymentData } from './types';
+import { ICancelPayment, IPaymentValidate, PaymentData } from './types';
 
 @Injectable()
 export class AppService {
@@ -62,6 +62,38 @@ export class AppService {
       ],
     };
 
+    return {
+      status: 'success',
+      data: data,
+      message: 'Success',
+    };
+  }
+
+  paymentValidate({ sessionId, method, transactionId }: IPaymentValidate) {
+    console.log({ sessionId, method, transactionId });
+    const data = {
+      url: `https://request.hellotask.app/success.php`,
+      id: '1',
+      status: 'initial',
+      amount: 1000,
+      appName: 'Next Byte',
+    };
+    return {
+      status: 'success',
+      data: data,
+      message: 'Success',
+    };
+  }
+
+  paymentCancel({ sessionId }: ICancelPayment) {
+    console.log({ sessionId });
+    const data = {
+      url: `https://request.hellotask.app`,
+      id: '1',
+      status: 'initial',
+      amount: 1000,
+      appName: 'Next Byte',
+    };
     return {
       status: 'success',
       data: data,
