@@ -3,10 +3,11 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.enableCors({
-    origin: ['https://payment.cedhan.site', 'http://localhost:3000'],
-    credentials: true,
-  });
+ app.enableCors({
+  origin: ['https://payment.cedhan.site', 'https://sendkori.vercel.app'],
+  credentials: true,
+});
+
 
   await app.listen(3001);
 }
