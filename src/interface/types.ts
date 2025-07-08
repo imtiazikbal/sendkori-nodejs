@@ -6,11 +6,8 @@ interface PaymentMethod {
   provider: string;
 }
 
-export interface PaymentData {
-  url: string;
-  id: string;
+export interface IPaymentData {
   appName: string;
-  status: 'pending' | 'completed' | 'failed' | 'initial';
   amount: number;
   paymentMethod: PaymentMethod[];
 }
@@ -23,4 +20,26 @@ export interface IPaymentValidate {
 
 export interface ICancelPayment {
   sessionId?: string;
+}
+
+export interface IAuth {
+  email: string;
+  firstName: string;
+  lastName: string;
+  picture: string;
+  accessToken: string;
+}
+
+export interface IJwtPayload {
+  sub: string; // user ID
+  email: string;
+}
+
+export enum StatusEnum {
+  ACTIVE = '1',
+  INACTIVE = '0',
+}
+
+export interface ICreateApi {
+  name: string;
 }

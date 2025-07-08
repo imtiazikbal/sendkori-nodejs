@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { ICancelPayment, IPaymentValidate, PaymentData } from './types';
+import {
+  ICancelPayment,
+  IPaymentData,
+  IPaymentValidate,
+} from '../../interface/types';
 
 @Injectable()
 export class AppService {
@@ -17,9 +21,7 @@ export class AppService {
   }
 
   paymentData({ sessionId }: { sessionId: string }) {
-    const data: PaymentData = {
-      url: `https://sendkori.vercel.app/?session_id=${sessionId}`,
-      id: '1',
+    const data = {
       status: 'initial',
       amount: 1000,
       appName: 'Next Byte',
