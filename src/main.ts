@@ -9,7 +9,7 @@ async function bootstrap() {
     origin: [
       'https://payment.cedhan.site',
       'https://sendkori.vercel.app',
-      'http://localhost:3000',
+      'http://localhost:3002',
     ],
     credentials: true,
   });

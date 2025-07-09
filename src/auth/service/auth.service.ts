@@ -5,11 +5,17 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Auth } from '../schema/auth.schema';
 import { ConfigService } from '@nestjs/config';
-import { ICreateApi, IJwtPayload, StatusEnum } from 'src/interface/types';
+import {
+  IAuthPaymentTran,
+  ICreateApi,
+  IJwtPayload,
+  StatusEnum,
+} from 'src/interface/types';
 import { JwtService } from '@nestjs/jwt';
 import { CustomError } from 'src/common/error/errors';
 import { Auth_API_key } from '../schema/auth-api.schema';
 import { v4 as uuidv4 } from 'uuid';
+import { Auth_Payment_Tran } from '../schema/auth-payment-tran.schema';
 
 interface ValidateApiKeyDto {
   apiKey: string;
@@ -24,6 +30,8 @@ export class AuthService {
     private readonly apiKeyModel: Model<Auth_API_key>,
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
+    @InjectModel(Auth_Payment_Tran.name)
+    private readonly authPaymentTranModel: Model<Auth_Payment_Tran>,
   ) {}
 
   async create({
@@ -258,6 +266,87 @@ export class AuthService {
         e?.message || 'Server error',
         e?.details,
         e?.statusCode,
+      );
+    }
+  }
+
+  // store auth payment transaction
+  async storeAuthPaymentTran({
+    fullMessage,
+    incomingTime,
+    key,
+    senderNumber,
+    amount,
+    fromNumber,
+    trxId,
+  }: IAuthPaymentTran) {
+    try {
+      const userId = await this.getUserIdByApiKey({ apiKey: key });
+      await this.checkUserIsActiveWithUserId({ id: userId });
+      await this.authPaymentTranModel.create({
+        key,
+        senderNumber,
+        incomingTime,
+        fullMessage,
+        trxId,
+        fromNumber,
+        amount,
+        userId,
+      });
+      return this.responseService.successResponse(
+        'Payment transaction stored successfully',
+        'Payment transaction stored successfully',
+      );
+    } catch (error) {
+      console.error('Error details:', error);
+      return this.responseService.throwError(
+        error?.message || 'Something went wrong',
+        error?.details || error?.stack || 'Unknown error',
+        error?.statusCode || HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  // find auth payment trand by user id
+  async findAuthPaymentTranByUserId({ userId }: { userId: string }) {
+    try {
+      const data = await this.authPaymentTranModel
+        .find(
+          { userId: userId },
+          {
+            validated: false,
+          },
+        )
+        .lean();
+      return data;
+    } catch (error) {
+      console.error('Error details:', error);
+      return this.responseService.throwError(
+        error?.message || 'Something went wrong',
+        error?.details || error?.stack || 'Unknown error',
+        error?.statusCode || HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  // auth payment tran validated by tranId
+  async authPaymentTranValidatedByTranId({ tranId }: { tranId: string }) {
+    try {
+      const data = await this.authPaymentTranModel
+        .findOneAndUpdate(
+          { trxId: tranId },
+          {
+            validated: true,
+          },
+        )
+        .lean();
+      return data;
+    } catch (error) {
+      console.error('Error details:', error);
+      throw new CustomError(
+        error?.message || 'Something went wrong',
+        error?.details || error?.stack || 'Unknown error',
+        error?.statusCode || HttpStatus.BAD_REQUEST,
       );
     }
   }

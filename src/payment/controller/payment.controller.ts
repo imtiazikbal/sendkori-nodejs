@@ -10,12 +10,13 @@ import {
 } from '@nestjs/common';
 import { PaymentService } from './../service/payment.service';
 import { CreatePaymentDto } from '../dto/create-payment.dto';
+import { ICancelPayment, IPaymentValidate } from 'src/interface/types';
 
 @Controller('payment')
 export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 
-  @Post('initiate')
+  @Post('/initiate')
   async create(
     @Body() createPaymentDto: CreatePaymentDto,
     @Req() req: Request,
@@ -32,6 +33,22 @@ export class PaymentController {
     return await this.paymentService.findOne({
       request: req,
       sessionId,
+    });
+  }
+
+  @Post('/validate')
+  paymentValidate(@Body() body: IPaymentValidate) {
+    return this.paymentService.paymentValidate({
+      sessionId: body.sessionId,
+      paymentMethod: body.paymentMethod,
+      transactionId: body.transactionId,
+    });
+  }
+
+  @Post('/cancel')
+  paymentCancel(@Body() body: ICancelPayment) {
+    return this.paymentService.paymentCancel({
+      sessionId: body?.sessionId,
     });
   }
 }

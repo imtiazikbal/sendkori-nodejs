@@ -1,14 +1,18 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { CreatePaymentDto } from '../dto/create-payment.dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { Payment } from '../schema/payment.schema';
+import { IPaymentSatus, Payment } from '../schema/payment.schema';
 import { Model } from 'mongoose';
 import { ResponseService } from 'src/common/error/response/response.service';
 import { AuthService } from 'src/auth/service/auth.service';
 import { CustomError } from 'src/common/error/errors';
 import * as dotenv from 'dotenv';
 import { ConfigService } from '@nestjs/config';
-import { IPaymentData } from 'src/interface/types';
+import {
+  ICancelPayment,
+  IPaymentData,
+  IPaymentValidate,
+} from 'src/interface/types';
 dotenv.config();
 @Injectable()
 export class PaymentService {
@@ -63,7 +67,7 @@ export class PaymentService {
         env === 'production'
           ? this.configService.get<string>('FRONTEND_PRODUCTION_URL')
           : this.configService.get<string>('FRONTEND_DEVELOPMENT_URL');
-      const url = `${redirectUrl}?session_id=${sessionId}`;
+      const url = `${redirectUrl}?sessionId=${sessionId}`;
       return {
         data: url,
       };
@@ -155,5 +159,127 @@ export class PaymentService {
     }
 
     return timestamp + randomDigits;
+  }
+
+  // paymentValidate
+
+  async paymentValidate({
+    sessionId,
+    paymentMethod,
+    transactionId,
+  }: IPaymentValidate) {
+    try {
+      // 1. Get payment record
+      const payment = await this.paymentModel.findOne({ sessionId }).exec();
+
+      if (!payment) {
+        throw new CustomError(
+          'Payment not found',
+          'Could not find payment',
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      if (payment?.sessionTimeout) {
+        throw new CustomError(
+          'Payment already validated',
+          'Payment already validated',
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      // 2. Check user is active
+      await this.authService.checkUserIsActiveWithUserId({
+        id: payment.userId,
+      });
+
+      // 3. Get user's auth payment transactions
+      const authTransactions =
+        await this.authService.findAuthPaymentTranByUserId({
+          userId: payment.userId,
+        });
+
+      // 4. Match and validate transaction
+      const matchedTransaction = authTransactions.find(
+        (item) => item.trxId === transactionId,
+      );
+
+      if (!matchedTransaction) {
+        throw new CustomError(
+          'Transaction not found',
+          `No matching transaction with ID: ${transactionId}`,
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      // 5. Update payment and mark transaction validated
+      await this.paymentModel.updateOne(
+        { sessionId },
+        {
+          $set: {
+            status: IPaymentSatus.COMPLETED,
+            sessionTimeout: true,
+            paymentMethod,
+          },
+        },
+      );
+
+      await this.authService.authPaymentTranValidatedByTranId({
+        tranId: transactionId,
+      });
+
+      return this.responseService.successResponse(
+        payment?.successUrl,
+        'Payment validated successfully',
+      );
+    } catch (error) {
+      console.error('Payment validation error:', error);
+
+      return this.responseService.throwError(
+        error?.message || 'Internal Server Error',
+        error?.details || 'Unexpected error occurred while validating payment',
+        error?.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  // canccel
+  async paymentCancel({ sessionId }: ICancelPayment) {
+    try {
+      console.log({ sessionId });
+      const payment = await this.paymentModel.findOne({ sessionId }).exec();
+
+      if (!payment) {
+        throw new CustomError(
+          'Payment not found',
+          'Could not find payment',
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      await this.paymentModel.updateOne(
+        { sessionId },
+        {
+          $set: {
+            status: IPaymentSatus.CANCELLED,
+            sessionTimeout: true,
+          },
+        },
+      );
+      const res = {
+        url: payment?.cancelUrl,
+      };
+      return this.responseService.successResponse(
+        res,
+        'Payment cancelled successfully',
+      );
+    } catch (error) {
+      console.error('Payment cancel error:', error);
+      return this.responseService.throwError(
+        error?.message || 'Internal Server Error',
+        error?.details || 'Unexpected error occurred while cancelling payment',
+        error?.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }

@@ -1,14 +1,20 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { CANCELLED } from 'dns';
 import { Document, Types } from 'mongoose';
 
 export type PaymentDocument = Payment & Document;
-const IPaymentSatus = {
-  FAILED: 'Failed',
-  PENDING: 'Pending',
-  COMPLETED: 'Completed',
-  CANCELLED: 'Cancelled',
-};
+export enum IPaymentSatus {
+  FAILED = 'Failed',
+  PENDING = 'Pending',
+  COMPLETED = 'Completed',
+  CANCELLED = 'Cancelled',
+}
+
+export interface IPaymentMethod {
+  name: string;
+  type: string;
+  amount: number;
+  tranId: string;
+}
 
 type ICurrency = 'USD' | 'BDT';
 @Schema({ timestamps: true })
@@ -46,6 +52,9 @@ export class Payment {
 
   @Prop({ required: false, default: false })
   sessionTimeout: boolean;
+
+  @Prop({ required: false, default: '' })
+  paymentMethod: string;
 
   @Prop({ default: IPaymentSatus.PENDING })
   status: string;

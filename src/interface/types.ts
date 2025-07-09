@@ -1,3 +1,5 @@
+import { IPaymentMethod } from 'src/payment/schema/payment.schema';
+
 type PaymentMethodType = 'mobile_payment' | 'card' | 'bank_transfer';
 
 interface PaymentMethod {
@@ -13,7 +15,7 @@ export interface IPaymentData {
 }
 
 export interface IPaymentValidate {
-  method: string;
+  paymentMethod: IPaymentMethod;
   sessionId?: string;
   transactionId: string;
 }
@@ -43,3 +45,28 @@ export enum StatusEnum {
 export interface ICreateApi {
   name: string;
 }
+
+export interface IAuthPaymentTran {
+  key: string;
+  senderNumber: string;
+  incomingTime: number;
+  fullMessage?: string;
+  trxId?: string;
+  fromNumber?: string;
+  amount?: number;
+}
+
+export type SMSBody = {
+  key: string;
+  senderNumber: string;
+  smsBody: string;
+  incomingTime: number;
+};
+
+export type ParsedMessage = {
+  fullMessage: string;
+  trxId?: string;
+  fromNumber?: string;
+  amount?: number;
+  senderNumber: string;
+};

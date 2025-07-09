@@ -11,6 +11,10 @@ import { JwtModule } from '@nestjs/jwt';
 import * as dotenv from 'dotenv';
 dotenv.config();
 import { Auth_API_key, Auth_API_keySchema } from '../schema/auth-api.schema';
+import {
+  Auth_Payment_Tran,
+  Auth_Payment_TranSchema,
+} from '../schema/auth-payment-tran.schema';
 @Module({
   imports: [
     PassportModule,
@@ -22,6 +26,10 @@ import { Auth_API_key, Auth_API_keySchema } from '../schema/auth-api.schema';
       {
         name: Auth_API_key.name,
         schema: Auth_API_keySchema,
+      },
+      {
+        name: Auth_Payment_Tran.name,
+        schema: Auth_Payment_TranSchema,
       },
     ]),
     JwtModule.register({
