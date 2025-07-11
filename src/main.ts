@@ -16,6 +16,7 @@ async function bootstrap() {
     origin: [
       'https://payment.cedhan.site',
       'https://sendkori.vercel.app',
+      'https://bondhu-pay-mercehant.vercel.app',
       'http://localhost:3001',
       'http://localhost:3002',
       'http://localhost:3000',
