@@ -104,46 +104,15 @@ export class PaymentService {
         id: payment?.userId,
       });
 
+      const authPaymentsMethods =
+        await this.authService.getAuthPaymentGatewayByUserId({
+          userId: payment?.userId,
+        });
+
       const response: IPaymentData = {
         amount: payment?.totalAmount,
         appName: user?.firstName + ' ' + user?.lastName || 'Bondhu Pay',
-        paymentMethod: [
-          {
-            name: 'bKash',
-            type: 'mobile_payment',
-            provider: 'bKash',
-          },
-          {
-            name: 'Nagad',
-            type: 'mobile_payment',
-            provider: 'Nagad',
-          },
-          {
-            name: 'Rocket',
-            type: 'mobile_payment',
-            provider: 'Rocket',
-          },
-          {
-            name: 'Visa',
-            type: 'card',
-            provider: 'Visa',
-          },
-          {
-            name: 'Mastercard',
-            type: 'card',
-            provider: 'Mastercard',
-          },
-          {
-            name: 'American Express',
-            type: 'card',
-            provider: 'Amex',
-          },
-          {
-            name: 'Bank Transfer',
-            type: 'bank_transfer',
-            provider: 'Local Banks',
-          },
-        ],
+        paymentMethod: authPaymentsMethods,
       };
       return this.responseService.successResponse(response, 'Payment data');
     } catch (error) {}

@@ -7,6 +7,7 @@ import {
   Logger,
   Post,
   Body,
+  Param,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from '../service/auth.service';
@@ -26,6 +27,13 @@ export class AuthController {
   private readonly logger = new Logger(AuthController.name);
 
   constructor(private readonly authService: AuthService) {}
+
+  // Auth Info
+  @Get('info')
+  @UseGuards(AuthGuard('jwt'))
+  async info(@Req() req: Request) {
+    return this.authService.getUserInfo({ request: req });
+  }
 
   // Initiate Google OAuth2 login
   @Get('google')
@@ -68,6 +76,27 @@ export class AuthController {
   @Post('generate-api-key')
   @UseGuards(AuthGuard('jwt'))
   async generateApiKey(@Body() body: ICreateApi, @Req() req: Request) {
-    return this.authService.createOrUpdateApiKey({ request: req, body });
+    return;
+  }
+  //  get all api keys
+  @Get('/api-keys')
+  @UseGuards(AuthGuard('jwt'))
+  async getAllApiKeys(@Req() req: Request) {
+    return this.authService.getUserAllApiKeys({ request: req });
+  }
+
+  // auth payment gateway store
+  @Post('/auth-payment-gateway/:gatewayId')
+  @UseGuards(AuthGuard('jwt'))
+  async authPaymentGateway(
+    @Req() req: Request,
+    @Param('gatewayId') gatewayId: string,
+    @Body() { number }: { number: string },
+  ) {
+    return this.authService.authPaymentGateway({
+      request: req,
+      gatewayId,
+      number,
+    });
   }
 }

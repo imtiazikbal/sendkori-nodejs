@@ -16,6 +16,7 @@ import { CustomError } from 'src/common/error/errors';
 import { Auth_API_key } from '../schema/auth-api.schema';
 import { v4 as uuidv4 } from 'uuid';
 import { Auth_Payment_Tran } from '../schema/auth-payment-tran.schema';
+import { Auth_Payment_Gateway } from '../schema/auth-payment-gateway';
 
 interface ValidateApiKeyDto {
   apiKey: string;
@@ -32,7 +33,32 @@ export class AuthService {
     private readonly jwtService: JwtService,
     @InjectModel(Auth_Payment_Tran.name)
     private readonly authPaymentTranModel: Model<Auth_Payment_Tran>,
+    @InjectModel(Auth_Payment_Gateway.name)
+    private readonly authPaymentGatewayModel: Model<Auth_Payment_Gateway>,
   ) {}
+
+  async getUserInfo({ request }: { request: any }) {
+    try {
+      const user = await this.authModel
+        .findOne({ email: request?.user?.email })
+        .lean();
+      if (!user) {
+        throw new CustomError(
+          'Unauthorized',
+          'UnAuthorized',
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
+      console.log({ user });
+      return this.responseService.successResponse(user, 'User profile fetched');
+    } catch (error: any) {
+      return this.responseService.throwError(
+        error?.message || 'Something went wrong',
+        error?.message,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 
   async create({
     firstName,
@@ -72,7 +98,7 @@ export class AuthService {
       const env = this.configService.get<string>('NODE_ENV');
       const redirectUrl =
         env === 'production'
-          ? this.configService.get<string>('FRONTEND_PRODUCTION_URL')
+          ? this.configService.get<string>('FRONTEND_MARCHEN_LIVE_URL')
           : this.configService.get<string>('FRONTEND_DEVELOPMENT_URL');
 
       const url = `${redirectUrl}?token=${token}&username=${encodeURIComponent(
@@ -160,7 +186,7 @@ export class AuthService {
         isActive: true,
       });
       return this.responseService.successResponse(
-        'API key created successfully',
+        apiKey,
         'API key created successfully',
       );
     } catch (error) {
@@ -178,15 +204,27 @@ export class AuthService {
   }
 
   //  Get all API keys for a user (safe to expose)
-  async getUserAllApiKeys(userId: string) {
+  async getUserAllApiKeys({ request }: { request: any }) {
+    const userId = request.user.userId;
+    if (!userId) {
+      throw new CustomError(
+        'UserID not found',
+        'UserID not found',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+    const email = request.user.email;
+    await this.checkUserIsActive({ id: userId, email });
     const keys = await this.apiKeyModel.find({ userId }).lean();
+    console.log({ keys });
 
-    return keys.map((key) => ({
+    const res = keys.map((key) => ({
       id: key?._id,
       keyName: key?.name,
       keyValue: key?.key,
       createdAt: key['createdAt'],
     }));
+    return this.responseService.successResponse(res, 'API keys fetched');
   }
 
   //  Delete API key by ID (with ownership check)
@@ -341,6 +379,67 @@ export class AuthService {
         )
         .lean();
       return data;
+    } catch (error) {
+      console.error('Error details:', error);
+      throw new CustomError(
+        error?.message || 'Something went wrong',
+        error?.details || error?.stack || 'Unknown error',
+        error?.statusCode || HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  // auth payment gateway store
+  async authPaymentGateway({
+    request,
+    gatewayId,
+    number,
+  }: {
+    request: any;
+    gatewayId: string;
+    number: string;
+  }) {
+    try {
+      const userId = request.user.userId;
+      const user = await this.checkUserIsActiveWithUserId({ id: userId });
+      const data = await this.authPaymentGatewayModel.create({
+        gatewayId,
+        userId,
+        status: true,
+        number: number,
+      });
+      return this.responseService.successResponse(
+        data,
+        'Payment gateway created successfully',
+      );
+    } catch (error) {
+      console.error('Error details:', error);
+      return this.responseService.throwError(
+        error?.message || 'Something went wrong',
+        error?.details || error?.stack || 'Unknown error',
+        error?.statusCode || HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  // get auth payment gateway by user id
+  async getAuthPaymentGatewayByUserId({ userId }: { userId: string }) {
+    try {
+      const data = await this.authPaymentGatewayModel
+        .find({ userId, status: true })
+        .populate('gatewayId')
+        .exec();
+      const modifiedMethod = data.map((item) => {
+        return {
+          id: item?._id,
+          name: item?.gatewayId?.['title'],
+          type: item?.gatewayId?.['type'],
+          provider: item?.gatewayId?.['paymentMethod'],
+          number: item?.number,
+          image: item?.gatewayId?.['image'],
+        };
+      });
+      return modifiedMethod;
     } catch (error) {
       console.error('Error details:', error);
       throw new CustomError(

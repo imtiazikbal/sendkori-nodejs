@@ -15,6 +15,10 @@ import {
   Auth_Payment_Tran,
   Auth_Payment_TranSchema,
 } from '../schema/auth-payment-tran.schema';
+import {
+  Auth_Payment_Gateway,
+  Auth_Payment_GatewaySchema,
+} from '../schema/auth-payment-gateway';
 @Module({
   imports: [
     PassportModule,
@@ -30,6 +34,10 @@ import {
       {
         name: Auth_Payment_Tran.name,
         schema: Auth_Payment_TranSchema,
+      },
+      {
+        name: Auth_Payment_Gateway.name,
+        schema: Auth_Payment_GatewaySchema,
       },
     ]),
     JwtModule.register({

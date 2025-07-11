@@ -4,14 +4,15 @@ services:
   sendkori-nodejs:
     build:
       context: .
-      dockerfile: ./Dockerfile
+      dockerfile: Dockerfile
     ports:
       - '3001:3001'
     volumes:
-      - ./:/usr/src/app
+      - ./uploads:/uploads              # Bind host uploads to container uploads
     env_file:
       - .env
-    command: yarn start:dev
     environment:
       PORT: 3001
+      UPLOAD_DIR: /uploads              # <-- Tell app where to store files
     restart: always
+    command: yarn start:prod
