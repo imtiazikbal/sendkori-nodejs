@@ -26,6 +26,7 @@ export class GatewayService {
         title,
         type,
         paymentMethod,
+        status,
       });
       return this.responseService.successResponse(
         'Gateway created successfully',
