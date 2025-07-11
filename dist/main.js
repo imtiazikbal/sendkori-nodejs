@@ -7,7 +7,7 @@ dotenv.config();
 const path_1 = require("path");
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
-    const uploadPath = (0, path_1.resolve)(process.env.UPLOAD_DIR || './uploads');
+    const uploadPath = (0, path_1.join)(__dirname, '..', '..', 'uploads');
     app.useStaticAssets(uploadPath, {
         prefix: '/images/',
     });
@@ -16,9 +16,9 @@ async function bootstrap() {
             'https://payment.cedhan.site',
             'https://sendkori.vercel.app',
             'https://bondhu-pay-mercehant.vercel.app',
+            'http://localhost:3000',
             'http://localhost:3001',
             'http://localhost:3002',
-            'http://localhost:3000',
         ],
         credentials: true,
     });
