@@ -9,7 +9,7 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // Serve static /uploads as /images
-  const uploadPath = join(__dirname, '..', '..', 'uploads');
+  const uploadPath = join(process.cwd(), 'uploads');
 
   app.useStaticAssets(uploadPath, {
     prefix: '/images/',

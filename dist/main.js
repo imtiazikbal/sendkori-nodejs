@@ -7,7 +7,7 @@ dotenv.config();
 const path_1 = require("path");
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
-    const uploadPath = (0, path_1.join)(__dirname, '..', '..', 'uploads');
+    const uploadPath = (0, path_1.join)(process.cwd(), 'uploads');
     app.useStaticAssets(uploadPath, {
         prefix: '/images/',
     });
