@@ -86,17 +86,25 @@ export class AuthController {
   }
 
   // auth payment gateway store
-  @Post('/auth-payment-gateway/:gatewayId')
+  @Post('/auth-payment-gateway')
   @UseGuards(AuthGuard('jwt'))
   async authPaymentGateway(
     @Req() req: Request,
-    @Param('gatewayId') gatewayId: string,
-    @Body() { number }: { number: string },
+    @Body() { number, gatewayId }: { number: string; gatewayId: string },
   ) {
     return this.authService.authPaymentGateway({
       request: req,
       gatewayId,
       number,
+    });
+  }
+
+  // auth paymentGateway list
+  @Get('/auth-payment-gateway')
+  @UseGuards(AuthGuard('jwt'))
+  async getAuthPaymentGatewayByUserId(@Req() req: Request) {
+    return this.authService.authPaymentGatewayList({
+      request: req,
     });
   }
 }

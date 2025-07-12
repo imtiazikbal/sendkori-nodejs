@@ -402,6 +402,17 @@ export class AuthService {
     try {
       const userId = request.user.userId;
       const user = await this.checkUserIsActiveWithUserId({ id: userId });
+
+      // const gateway = await this.authPaymentGatewayModel.findOne({
+      //   _id: gatewayId,
+      // });
+      // if (!gateway) {
+      //   throw new CustomError(
+      //     'Gateway not found',
+      //     'Gateway not found',
+      //     HttpStatus.NOT_FOUND,
+      //   );
+      // }
       const data = await this.authPaymentGatewayModel.create({
         gatewayId,
         userId,
@@ -437,9 +448,43 @@ export class AuthService {
           provider: item?.gatewayId?.['paymentMethod'],
           number: item?.number,
           image: item?.gatewayId?.['image'],
+          status: item?.status,
+          gatewayId: item?.gatewayId,
         };
       });
       return modifiedMethod;
+    } catch (error) {
+      console.error('Error details:', error);
+      throw new CustomError(
+        error?.message || 'Something went wrong',
+        error?.details || error?.stack || 'Unknown error',
+        error?.statusCode || HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  // authPaymentGatewayList
+  async authPaymentGatewayList({ request }: { request: any }) {
+    try {
+      const userId = request.user.userId;
+      await this.checkUserIsActiveWithUserId({ id: userId });
+      const data = await this.getAuthPaymentGatewayByUserId({ userId });
+      const modifiedMethod = data.map((item) => {
+        return {
+          id: item?.id,
+          name: item?.name,
+          type: item?.type,
+          provider: item?.provider,
+          number: item?.number,
+          image: item?.image,
+          status: item?.status,
+          gatewayId: item?.gatewayId?.['_id'],
+        };
+      });
+      return this.responseService.successResponse(
+        modifiedMethod,
+        'Auth ActivemPayment gateway list',
+      );
     } catch (error) {
       console.error('Error details:', error);
       throw new CustomError(

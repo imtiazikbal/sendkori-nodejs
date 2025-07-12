@@ -14,6 +14,18 @@ import {
   IPaymentValidate,
 } from 'src/interface/types';
 dotenv.config();
+
+interface IPaymentReceive {
+  id: string;
+  title: string;
+  type: string;
+  amount: number;
+  createdAt: string;
+  status: string;
+  transactionId: string;
+  updatedAt: string;
+  method: string;
+}
 @Injectable()
 export class PaymentService {
   constructor(
@@ -247,6 +259,59 @@ export class PaymentService {
       return this.responseService.throwError(
         error?.message || 'Internal Server Error',
         error?.details || 'Unexpected error occurred while cancelling payment',
+        error?.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  // paymentReceive
+  async paymentReceive({ request }: { request: any }) {
+    try {
+      console.log({ request });
+      const userId = request?.user?.userId;
+      const email = request?.user?.email;
+      await this.authService.checkUserIsActive({
+        id: userId,
+        email: email || '',
+      });
+      const payment = await this.paymentModel
+        .find({
+          userId,
+          status: IPaymentSatus.COMPLETED,
+        })
+        .exec();
+      if (!payment) {
+        throw new CustomError(
+          'Payment not found',
+          'Could not find payment',
+          HttpStatus.NOT_FOUND,
+        );
+      }
+      const mdata = payment.map((item) => {
+        return {
+          id: item?._id.toString(),
+          title: item?.paymentMethod,
+          type:
+            item?.paymentMethod === 'BKASH'
+              ? 'Mobile Banking'
+              : 'Bank Transfer',
+          amount: item?.totalAmount,
+          createdAt: item?.['createdAt'],
+          status: item?.status,
+          transactionId: item?.tranId,
+          updatedAt: item?.['updatedAt'],
+          method: item?.paymentMethod,
+        };
+      });
+      return this.responseService.successResponse(
+        mdata,
+        'Payment received successfully',
+      );
+    } catch (error) {
+      console.error('Payment receive error:', error);
+      return this.responseService.throwError(
+        error?.message || 'Internal Server Error',
+        error?.details || 'Unexpected error occurred while receiving payment',
         error?.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

@@ -48,7 +48,18 @@ export class GatewayService {
           status: true,
         })
         .exec();
-      return this.responseService.successResponse(data, 'Gateways fetched');
+
+      const mData = data.map((item) => {
+        return {
+          id: item?._id,
+          title: item?.title,
+          type: item?.type,
+          paymentMethod: item?.paymentMethod,
+          image: item?.image,
+          status: item?.status,
+        };
+      });
+      return this.responseService.successResponse(mData, 'Gateways fetched');
     } catch (error) {
       console.error('Error details:', error);
       return this.responseService.throwError(
