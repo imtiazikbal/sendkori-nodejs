@@ -12,7 +12,7 @@ export interface Auth_Payment_Tran extends Document {
 }
 @Schema({ timestamps: true })
 export class Auth_Payment_Tran {
-  @Prop({ required: true, unique: true, index: true, ref: 'Auth_API_key' })
+  @Prop({ required: true, index: true, ref: 'Auth_API_key' })
   key: string;
 
   @Prop({ type: Types.ObjectId, ref: 'Auth', index: true })
@@ -27,7 +27,7 @@ export class Auth_Payment_Tran {
   @Prop({ required: false })
   fullMessage: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false, default: '' })
   trxId?: string;
 
   @Prop({ required: false })

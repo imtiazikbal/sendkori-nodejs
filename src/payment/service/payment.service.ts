@@ -78,7 +78,7 @@ export class PaymentService {
       const redirectUrl =
         env === 'production'
           ? this.configService.get<string>('FRONTEND_PRODUCTION_URL')
-          : this.configService.get<string>('FRONTEND_DEVELOPMENT_URL');
+          : this.configService.get<string>('FRONTEND_PAYMENT_URL');
       const url = `${redirectUrl}?sessionId=${sessionId}`;
       return {
         data: url,

@@ -9,6 +9,7 @@ import {
   IAuthPaymentTran,
   ICreateApi,
   IJwtPayload,
+  SMSBody,
   StatusEnum,
 } from 'src/interface/types';
 import { JwtService } from '@nestjs/jwt';
@@ -17,6 +18,7 @@ import { Auth_API_key } from '../schema/auth-api.schema';
 import { v4 as uuidv4 } from 'uuid';
 import { Auth_Payment_Tran } from '../schema/auth-payment-tran.schema';
 import { Auth_Payment_Gateway } from '../schema/auth-payment-gateway';
+import { parseSingleMessage } from 'src/utils/utils';
 
 interface ValidateApiKeyDto {
   apiKey: string;
@@ -310,37 +312,76 @@ export class AuthService {
 
   // store auth payment transaction
   async storeAuthPaymentTran({
-    fullMessage,
-    incomingTime,
     key,
     senderNumber,
-    amount,
-    fromNumber,
-    trxId,
-  }: IAuthPaymentTran) {
+    incomingTime,
+    smsBody,
+  }: SMSBody) {
     try {
       const userId = await this.getUserIdByApiKey({ apiKey: key });
       await this.checkUserIsActiveWithUserId({ id: userId });
+
+      const existingTran = await this.authPaymentTranModel.findOne({
+        incomingTime,
+        key,
+      });
+
+      if (existingTran) {
+        const updatedMessage = existingTran.fullMessage + '\n' + smsBody;
+
+        const parsed = parseSingleMessage({ message: updatedMessage });
+
+        await this.authPaymentTranModel.updateOne(
+          { incomingTime, key },
+          {
+            $set: {
+              fullMessage: updatedMessage,
+              trxId: parsed.trxId,
+              fromNumber: parsed.fromNumber,
+              amount: parsed.amount,
+              senderNumber,
+              userId,
+            },
+          },
+        );
+
+        return this.responseService.successResponse(
+          'Payment transaction updated successfully',
+          'Payment transaction updated successfully',
+        );
+      }
+
+      const parsed = parseSingleMessage({ message: smsBody });
+
       await this.authPaymentTranModel.create({
         key,
         senderNumber,
         incomingTime,
-        fullMessage,
-        trxId,
-        fromNumber,
-        amount,
+        fullMessage: smsBody,
+        trxId: parsed.trxId,
+        fromNumber: parsed.fromNumber,
+        amount: parsed.amount,
         userId,
       });
+
       return this.responseService.successResponse(
         'Payment transaction stored successfully',
         'Payment transaction stored successfully',
       );
     } catch (error) {
-      console.error('Error details:', error);
+      console.error('Error in storeAuthPaymentTran:', error);
+
+      const errMsg =
+        error instanceof Error ? error.message : 'Something went wrong';
+      const errDetails =
+        error instanceof Error
+          ? error.stack || 'No stack trace'
+          : 'Unknown error details';
+
       return this.responseService.throwError(
-        error?.message || 'Something went wrong',
-        error?.details || error?.stack || 'Unknown error',
-        error?.statusCode || HttpStatus.BAD_REQUEST,
+        errMsg,
+        errDetails,
+        HttpStatus.BAD_REQUEST,
       );
     }
   }

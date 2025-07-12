@@ -16,17 +16,12 @@ export class AppService {
     return 'Hello World!';
   }
 
-  async paymentWebHook({ smsBody }: { smsBody: any }) {
-    const { fullMessage, trxId, fromNumber, amount, senderNumber } =
-      parseSingleMessage(smsBody);
+  async paymentWebHook({ smsBody }: { smsBody: SMSBody }) {
     return this.authService.storeAuthPaymentTran({
-      fullMessage,
       incomingTime: smsBody?.incomingTime,
       key: smsBody?.key,
-      senderNumber,
-      amount,
-      fromNumber,
-      trxId: trxId,
+      senderNumber: smsBody?.senderNumber,
+      smsBody: smsBody?.smsBody,
     });
   }
 }
